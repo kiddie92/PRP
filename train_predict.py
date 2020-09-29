@@ -298,7 +298,9 @@ def main():
         val_size = 400
         train_dataset, val_dataset = random_split(train_dataset, (len(train_dataset) - val_size, val_size))
 
-    train_loader = DataLoader(train_dataset,batch_size=params['batch_size'],shuffle=True,num_workers=params['num_workers'],drop_last=True)
+    # train_loader = DataLoader(train_dataset,batch_size=params['batch_size'],shuffle=True,num_workers=params['num_workers'],drop_last=True)
+    train_loader = DataLoader(train_dataset, batch_size=params['batch_size'], shuffle=True,
+                              num_workers=params['num_workers'], drop_last=True)
     val_loader = DataLoader(val_dataset,batch_size=params['batch_size'],shuffle=True,num_workers=params['num_workers'],drop_last=True)
     if multi_gpu ==1:
         model = nn.DataParallel(model)
