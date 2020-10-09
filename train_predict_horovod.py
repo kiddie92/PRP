@@ -165,14 +165,16 @@ def train(train_loader, model, criterion_MSE, criterion_CE, optimizer, epoch, wr
                 'loss_res': losses_recon.avg,
                 'loss_cls': losses_class.avg * 0.1
             }
-            # writer.add_scalars('train/loss', info, total_step)
+            if writer:
+                writer.add_scalars('train/loss', info, total_step)
 
             info_acc = {}
             for cls in range(correct_cls_cnt.size(0)):
                 acc_cls = correct_cls_cnt[cls] / total_cls_cnt[cls]
                 info_acc['cls{}'.format(cls)] = acc_cls
             info_acc['avg'] = acc.avg * 0.01
-            # writer.add_scalars('train/acc', info_acc, total_step)
+            if writer:
+                writer.add_scalars('train/acc', info_acc, total_step)
 
     avg_cls_loss = total_cls_loss / len(train_loader)
     avg_acc = correct_cnt / len(train_loader.dataset)
@@ -345,7 +347,10 @@ def main():
     model_save_dir = os.path.join(save_path, time.strftime('%m-%d-%H-%M'))
     #  writer = SummaryWriter(model_save_dir)
     # hvd
-    writer = SummaryWriter(model_save_dir) if hvd.rank() == 0 else None
+    if hvd.rank() == 0:
+        writer = SummaryWriter(model_save_dir)
+    else:
+        writer = None
     if not os.path.exists(model_save_dir):
         os.makedirs(model_save_dir)
 
@@ -358,7 +363,7 @@ def main():
             model_path = os.path.join(model_save_dir, 'best_model_{}.pth.tar'.format(epoch))
             torch.save(model.state_dict(), model_path)
             prev_best_val_loss = val_loss;
-            if prev_best_loss_model_path:
+            if hvd.rank() == 0 and prev_best_loss_model_path:
                 os.remove(prev_best_loss_model_path)
             prev_best_loss_model_path = model_path
         scheduler.step(val_loss);
